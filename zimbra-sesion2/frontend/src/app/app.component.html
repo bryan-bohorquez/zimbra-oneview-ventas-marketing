@@ -1,0 +1,55 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">Z</div><div><strong>zimbra</strong><span>ONEVIEW CRM</span></div></div>
+    <div class="workspace-label">ESPACIO DE TRABAJO</div>
+    <nav>
+      <a class="nav-link active"><span class="nav-icon">▦</span> Resumen</a>
+      <a class="nav-link"><span class="nav-icon">◎</span> Prospectos <b>{{ metrics?.prospectos_activos ?? '—' }}</b></a>
+      <a class="nav-link"><span class="nav-icon">◷</span> Actividad web</a>
+      <a class="nav-link"><span class="nav-icon">✉</span> Campañas</a>
+      <a class="nav-link"><span class="nav-icon">▤</span> Propuestas y ventas</a>
+      <a class="nav-link"><span class="nav-icon">▥</span> Reportes</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="connection"><span class="dot" [class.offline]="!connection"></span><span>{{ connection ? 'MySQL conectado' : 'Sin conexión' }}</span></div>
+      <div class="user"><div class="avatar">EC</div><div><strong>Equipo comercial</strong><small>Ventas y marketing</small></div><span class="dots">···</span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar"><div class="crumb">Ventas y marketing <span>/</span> <strong>Resumen</strong></div><div class="top-actions"><button class="icon-button" aria-label="Buscar">⌕</button><button class="bell" aria-label="Alertas">♧<i>{{ metrics?.alertas_pendientes ?? 0 }}</i></button><div class="top-avatar">EC</div></div></header>
+    <section class="content">
+      <div class="page-heading"><div><p class="eyebrow">MARTES, 17 DE NOVIEMBRE DE 2026</p><h1>Hola, equipo <span>✦</span></h1><p class="subheading">Aquí está el pulso de tu equipo y tus prospectos.</p></div><button class="outline-button" (click)="refresh()"><span>↻</span> Actualizar</button></div>
+
+      <div class="notice" *ngIf="message"><span>ⓘ</span>{{ message }}</div>
+
+      <section class="metric-grid">
+        <article class="metric-card"><div class="metric-head"><span>CONTACTOS</span><span class="metric-icon blue">♙</span></div><strong>{{ metrics?.contactos ?? '—' }}</strong><small>Registros en la base</small></article>
+        <article class="metric-card"><div class="metric-head"><span>PROSPECTOS ACTIVOS</span><span class="metric-icon purple">◎</span></div><strong>{{ metrics?.prospectos_activos ?? '—' }}</strong><small>En atención comercial</small></article>
+        <article class="metric-card"><div class="metric-head"><span>VENTAS CERRADAS</span><span class="metric-icon green">↗</span></div><strong>{{ metrics?.ventas ?? '—' }}</strong><small>{{ money(metrics?.ingresos) }} en ventas</small></article>
+        <article class="metric-card"><div class="metric-head"><span>ALERTAS PENDIENTES</span><span class="metric-icon amber">♧</span></div><strong>{{ metrics?.alertas_pendientes ?? '—' }}</strong><small>Retornos de prospectos</small></article>
+      </section>
+
+      <div class="section-title"><div><h2>Prospectos prioritarios</h2><p>Prospectos calificados y actividad reciente</p></div><button class="text-button">Ver todos <span>→</span></button></div>
+      <div class="lower-grid">
+        <section class="panel prospects-panel">
+          <div class="table-toolbar"><div class="tabs"><button class="selected">Todos <span>{{ prospects.length }}</span></button><button>Calificados</button><button>Sin contactar</button></div><button class="filter-button">☷ <span>Filtrar</span></button></div>
+          <div class="table-scroll"><table><thead><tr><th>PROSPECTO</th><th>ESTADO</th><th>PUNTAJE</th><th>VENDEDOR</th><th></th></tr></thead><tbody>
+            <tr *ngFor="let prospect of prospects.slice(0,8)"><td><div class="person"><div class="person-avatar">{{ prospect.contacto.charAt(0) }}{{ prospect.apellido.charAt(0) }}</div><div><strong>{{ prospect.contacto }} {{ prospect.apellido }}</strong><small>{{ prospect.empresa || prospect.email }}</small></div></div></td><td><span class="status" [ngClass]="prospect.estado === 'Calificado' ? 'qualified' : 'contacted'">{{ prospect.estado }}</span></td><td><span class="score">{{ prospect.puntaje }}<i> pts</i></span></td><td class="seller">{{ prospect.vendedor || 'Sin asignar' }}</td><td><button class="visit-button" [disabled]="busyId === prospect.id_prospecto" (click)="simulateVisit(prospect)">Simular visita</button></td></tr>
+            <tr *ngIf="!prospects.length"><td colspan="5" class="empty">{{ loading ? 'Cargando prospectos…' : 'No hay prospectos para mostrar.' }}</td></tr>
+          </tbody></table></div>
+          <div class="table-footer">Mostrando {{ prospects.length > 8 ? 8 : prospects.length }} de {{ prospects.length }} prospectos <button class="text-button">Ver lista completa →</button></div>
+        </section>
+
+        <section class="panel alerts-panel"><div class="panel-heading"><div><h2>Alertas de actividad</h2><p>El equipo puede actuar a tiempo</p></div><span class="alert-count">{{ alerts.length }}</span></div>
+          <div class="alert-list"><article class="alert-item" *ngFor="let alert of alerts.slice(0,5)"><div class="alert-symbol">↗</div><div class="alert-copy"><strong>{{ alert.contacto }} volvió al sitio</strong><p>{{ alert.mensaje }}</p><small>{{ alert.fecha_hora | date:'short' }}</small></div><button class="read-button" title="Marcar como leída" (click)="markRead(alert)">✓</button></article>
+          <div class="empty alert-empty" *ngIf="!alerts.length">Las alertas de visitas de prospectos aparecerán aquí.</div></div>
+          <button class="all-alerts">Ver todas las alertas <span>→</span></button>
+        </section>
+      </div>
+
+      <section class="flow-card"><div><div class="flow-kicker">EMBUDO COMERCIAL</div><h2>Del interés a la venta</h2><p>OneView reúne la actividad web y el seguimiento de ventas en un solo lugar.</p></div><div class="flow-steps"><div class="flow-step"><span class="flow-circle">⌕</span><strong>Visita</strong><small>Actividad web</small></div><span class="flow-arrow">→</span><div class="flow-step"><span class="flow-circle">◎</span><strong>Calificación</strong><small>Puntaje de interés</small></div><span class="flow-arrow">→</span><div class="flow-step"><span class="flow-circle">♙</span><strong>Seguimiento</strong><small>Alerta al vendedor</small></div><span class="flow-arrow">→</span><div class="flow-step"><span class="flow-circle">▤</span><strong>Propuesta</strong><small>Venta cerrada</small></div></div></section>
+      <footer>Prototipo académico · Datos simulados · Zimbra OneView <span>Conectado a MySQL mediante Java API</span></footer>
+    </section>
+  </main>
+</div>
